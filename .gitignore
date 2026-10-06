@@ -1,0 +1,35 @@
+# Dependencies & builds
+node_modules/
+dist/
+*.tsbuildinfo
+coverage/
+
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+vapid*.json
+
+# Databases
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+data/
+
+# Uploaded private content
+storage/*
+!storage/.gitkeep
+
+# Backups
+backups/
+
+# OS / editor
+.DS_Store
+*.log
+.vscode/
+.idea/

@@ -1,0 +1,47 @@
+# Serves the PWA, proxies /api and /ws to the backend, and obtains HTTPS
+# certificates automatically (Let's Encrypt / ZeroSSL, both free ACME CAs).
+# TLS_MODE in .env: your e-mail address for public certificates, or "internal"
+# for a LAN-only / localhost server (Caddy's own local CA).
+{
+	admin off
+}
+
+{$DOMAIN:localhost} {
+	tls {$TLS_MODE:internal}
+
+	encode zstd gzip
+
+	request_body {
+		max_size {$MAX_REQUEST_BODY:600MB}
+	}
+
+	# Private API + WebSocket. Security headers come from the backend.
+	@backend path /api/* /ws
+	handle @backend {
+		reverse_proxy backend:3000 {
+			flush_interval -1
+		}
+	}
+
+	# Static application shell.
+	handle {
+		root * /srv
+		header {
+			Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; media-src 'self' blob:; connect-src 'self' wss://{host}; font-src 'self'; object-src 'none'; frame-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'; worker-src 'self'; manifest-src 'self'"
+			Strict-Transport-Security "max-age=31536000"
+			X-Content-Type-Options "nosniff"
+			X-Frame-Options "DENY"
+			Referrer-Policy "no-referrer"
+			Permissions-Policy "geolocation=(), microphone=(), payment=(), usb=()"
+			Cross-Origin-Opener-Policy "same-origin"
+			X-Robots-Tag "noindex, nofollow"
+			-Server
+		}
+		@hashed path /assets/*
+		header @hashed Cache-Control "public, max-age=31536000, immutable"
+		@fresh path / /index.html /service-worker.js /manifest.json
+		header @fresh Cache-Control "no-cache"
+		try_files {path} /index.html
+		file_server
+	}
+}

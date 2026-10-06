@@ -1,0 +1,12 @@
+**/node_modules
+**/dist
+.git
+.env
+.env.*
+storage
+data
+backups
+native
+docs
+**/*.db
+**/*.sqlite*
